@@ -1,7 +1,7 @@
 
-# Helidon Example: quickstart-se
+# Alpha Office PriceService:  Simple Example of Helidon SE service
 
-This example implements a simple Hello World REST service.
+This example implements a simple price REST service.
 
 ## Prerequisites
 
@@ -29,35 +29,30 @@ mvn package
 ## Start the application
 
 ```
-java -jar target/quickstart-se.jar
+java -jar target/priceservice.jar
 ```
 
 ## Exercise the application
 
 ```
-curl -X GET http://localhost:8080/greet
-{"message":"Hello World!"}
+curl -X GET http://localhost:8080/price
+{"message":"PriceService:1.0"}
 
-curl -X GET http://localhost:8080/greet/Joe
-{"message":"Hello Joe!"}
+curl -X GET http://localhost:8080/price/1001
+{"price":"16.00"}
 
-curl -X PUT http://localhost:8080/greet/greeting/Hola
-{"gretting":"Hola"}
-
-curl -X GET http://localhost:8080/greet/Jose
-{"message":"Hola Jose!"}
 ```
 
 ## Build the Docker Image
 
 ```
-docker build -t quickstart-se target
+docker build -t priceservice target
 ```
 
 ## Start the application with Docker
 
 ```
-docker run --rm -p 8080:8080 quickstart-se:latest
+docker run --rm -p 8080:8080 priceservice:latest
 ```
 
 Exercise the application as described above
@@ -68,5 +63,5 @@ Exercise the application as described above
 kubectl cluster-info                # Verify which cluster
 kubectl get pods                    # Verify connectivity to cluster
 kubectl create -f target/app.yaml   # Deply application
-kubectl get service quickstart-se  # Get service info
+kubectl get service priceservice  # Get service info
 ```
