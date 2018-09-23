@@ -1,5 +1,5 @@
 .project
-.DS_Store
+*/.DS_Store
 .classpath
 src/.DS_Store
 .settings/*
