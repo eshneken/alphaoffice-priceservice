@@ -67,7 +67,7 @@ public class MainTest {
         Assertions.assertEquals(200, conn.getResponseCode(), "HTTP response2");
         jsonReader = Json.createReader(conn.getInputStream());
         jsonObject = jsonReader.readObject();
-        Assertions.assertEquals("16.00", jsonObject.getString("price"),
+        Assertions.assertEquals("16.79", jsonObject.getString("price"),
                 "item price found");
 
         conn = getURLConnection("GET", "/price/1001111111");

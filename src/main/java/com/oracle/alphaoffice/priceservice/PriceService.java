@@ -41,11 +41,11 @@ public class PriceService implements Service {
     /**
      * In-memory price catalog
      */
-    private static java.util.Map<Integer, Float> prices;
+    private static java.util.Map<Integer, Double> prices;
 
     public PriceService() {
 
-        prices = new HashMap<Integer, Float>();
+        prices = new HashMap<Integer, Double>();
         try {
             System.out.println("**reading catalog:  " + CONFIG.get("catalog_path").asString());
             java.io.InputStream in = getClass().getResourceAsStream(CONFIG.get("catalog_path").asString());
@@ -56,7 +56,8 @@ public class PriceService implements Service {
             JsonArray products = productRoot.getJsonArray("Products");
             for (int x=0; x < products.size(); x++) {
                 JsonObject item = products.getJsonObject(x);
-                prices.put(Integer.valueOf(item.getInt("PRODUCT_ID")), Float.valueOf(item.getInt("LIST_PRICE")));
+                prices.put(Integer.valueOf(item.getInt("PRODUCT_ID")), Double.valueOf(item.getJsonNumber("LIST_PRICE").doubleValue()));
+                System.out.println("Loading: " + Integer.valueOf(item.getInt("PRODUCT_ID")) + "="+ Double.valueOf(item.getJsonNumber("LIST_PRICE").doubleValue()));
             }
         }
         catch (Exception exc) {
