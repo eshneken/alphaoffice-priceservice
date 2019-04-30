@@ -11,6 +11,18 @@ import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
 import io.helidon.webserver.Service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
+
+import oracle.jdbc.pool.OracleDataSource;
+import oracle.jdbc.OracleConnection;
+import java.sql.DatabaseMetaData;
+
 /**
  * A simple price service for the Alpha Office application
  * 
@@ -41,28 +53,82 @@ public class PriceService implements Service {
     /**
      * In-memory price catalog
      */
-    private static java.util.Map<Integer, Double> prices;
+    private static java.util.Map < Integer, Double > prices;
+
+    /** 
+     * database data
+     */
+    private static boolean UseDB = true;
+    private final static String DB_URL = "jdbc:oracle:thin:@atp_medium?TNS_ADMIN=/Users/eshneken/OCI/Wallet_ATP";
+    private final static String DB_USER = "admin";
+    private final static String DB_PASSWORD = "";
 
     public PriceService() {
 
-        prices = new HashMap<Integer, Double>();
+        prices = new HashMap < Integer, Double > ();
         try {
             System.out.println("**reading catalog:  " + CONFIG.get("catalog_path").asString());
             java.io.InputStream in = getClass().getResourceAsStream(CONFIG.get("catalog_path").asString());
-            javax.json.JsonReader reader = Json.createReader(in);
+            javax.json.JsonReader reader = Json.createReader( in );
             JsonObject productRoot = reader.readObject();
             reader.close();
 
             JsonArray products = productRoot.getJsonArray("Products");
-            for (int x=0; x < products.size(); x++) {
+            for (int x = 0; x < products.size(); x++) {
                 JsonObject item = products.getJsonObject(x);
                 prices.put(Integer.valueOf(item.getInt("PRODUCT_ID")), Double.valueOf(item.getJsonNumber("LIST_PRICE").doubleValue()));
-                System.out.println("Loading: " + Integer.valueOf(item.getInt("PRODUCT_ID")) + "="+ Double.valueOf(item.getJsonNumber("LIST_PRICE").doubleValue()));
+                System.out.println("Loading: " + Integer.valueOf(item.getInt("PRODUCT_ID")) + "=" + Double.valueOf(item.getJsonNumber("LIST_PRICE").doubleValue()));
             }
-        }
-        catch (Exception exc) {
+
+            // database connect
+            System.out.println("\n**checking DB catalog");
+            Properties info = new Properties();
+            info.put(OracleConnection.CONNECTION_PROPERTY_USER_NAME, DB_USER);
+            info.put(OracleConnection.CONNECTION_PROPERTY_PASSWORD, DB_PASSWORD);
+            info.put(OracleConnection.CONNECTION_PROPERTY_DEFAULT_ROW_PREFETCH, "50");
+
+            OracleDataSource ods = new OracleDataSource();
+            ods.setURL(DB_URL);
+            ods.setConnectionProperties(info);
+
+            // With AutoCloseable, the connection is closed automatically.
+            try (OracleConnection connection = (OracleConnection) ods.getConnection()) {
+                // Get the JDBC driver name and version 
+                DatabaseMetaData dbmd = connection.getMetaData();
+                System.out.println("Driver Name: " + dbmd.getDriverName());
+                System.out.println("Driver Version: " + dbmd.getDriverVersion());
+                // Print some connection properties
+                System.out.println("Default Row Prefetch Value is: " +
+                    connection.getDefaultRowPrefetch());
+                System.out.println("Database Username is: " + connection.getUserName());
+                System.out.println();
+
+                // Perform a database operation 
+                try (Statement statement = connection.createStatement()) {
+                    try (ResultSet resultSet = statement
+                        .executeQuery("select product_id, list_price from product_catalog order by product_id")) {
+                        int counter = 0;
+                        while (resultSet.next()) {
+                            System.out.println(resultSet.getString(1) + "=" +
+                                resultSet.getString(2) + " ");
+                            counter++;
+                        }
+                        System.out.println("**total rows in catalog=" + counter);
+                        if (counter < 10)
+                            throw new Exception("DB Catalog returns " + counter + " rows");
+                    }
+                }
+            } catch (Exception exc) {
+                System.out.println("Exception in DB Init: " + exc);
+                UseDB = false;
+            }
+        } catch (Exception exc) {
             System.out.println(exc);
+        } finally {
+            System.out.println("**UseDB=" + UseDB);
         }
+
+
     }
 
 
@@ -83,12 +149,12 @@ public class PriceService implements Service {
      * @param response the server response
      */
     private void getDefaultMessage(final ServerRequest request,
-                                   final ServerResponse response) {
+        final ServerResponse response) {
         String msg = String.format("PriceService:%s", version);
 
         JsonObject returnObject = Json.createObjectBuilder()
-                .add("message", msg)
-                .build();
+            .add("message", msg)
+            .build();
         response.send(returnObject);
     }
 
@@ -98,24 +164,65 @@ public class PriceService implements Service {
      * @param response the server response
      */
     private void getPrice(final ServerRequest request,
-                            final ServerResponse response) {
+        final ServerResponse response) {
         String id = request.path().param("id");
         String price;
-        
+
         try {
             Integer idKey = Integer.valueOf(id);;
-            if (!prices.containsKey(idKey))
-                throw new Exception("item " + id + " not found in catalog");
 
-            price = String.format("%.2f", prices.get(idKey));
+            if (UseDB) {
+                price = getPriceFromDB(idKey);
+            } else {
+                if (!prices.containsKey(idKey))
+                    throw new Exception("item " + id + " not found in catalog");
+
+                price = String.format("%.2f", prices.get(idKey));
+            }
         } catch (Exception exc) {
             System.out.println(exc);
             price = "0.00";
         }
 
         JsonObject returnObject = Json.createObjectBuilder()
-                .add("price", price)
-                .build();
+            .add("price", price)
+            .build();
         response.send(returnObject);
     }
+
+    private String getPriceFromDB(Integer ID) {
+        Properties info = new Properties();
+        info.put(OracleConnection.CONNECTION_PROPERTY_USER_NAME, DB_USER);
+        info.put(OracleConnection.CONNECTION_PROPERTY_PASSWORD, DB_PASSWORD);
+        info.put(OracleConnection.CONNECTION_PROPERTY_DEFAULT_ROW_PREFETCH, "50");
+
+        try {
+            OracleDataSource ods = new OracleDataSource();
+            ods.setURL(DB_URL);
+            ods.setConnectionProperties(info);
+
+            // With AutoCloseable, the connection is closed automatically.
+            try (OracleConnection connection = (OracleConnection) ods.getConnection()) {
+                try (Statement statement = connection.createStatement()) {
+                    try (ResultSet resultSet = statement
+                        .executeQuery("select list_price from product_catalog where product_id = " + ID)) {
+                        if (resultSet.next()) {
+                            System.out.println("**ATP says " + ID + "=" + resultSet.getString(1));
+                            return resultSet.getString(1);
+                        }
+                        else {
+                            throw new Exception("item " + ID + " not found in catalog");
+
+                        }
+                    }
+                }
+
+            }
+        } catch (Exception exc) {
+            System.out.println("EXCEPTION in DB Select: " + exc);
+        }
+
+        return "0.00";
+    }
+
 }

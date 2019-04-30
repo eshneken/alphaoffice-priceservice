@@ -5,3 +5,5 @@ src/.DS_Store
 .settings/*
 .vscode/settings.json
 target/*
+.DS_Store
+launch.json
