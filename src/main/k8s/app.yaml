@@ -22,7 +22,7 @@ metadata:
   labels:
     app: priceservice
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: priceservice
   ports:
@@ -45,7 +45,7 @@ spec:
       containers:
       - name: priceservice
         image: iad.ocir.io/orasenatdecaentegacpgut02/eshneken_ocir/priceservice:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         volumeMounts:
@@ -54,7 +54,7 @@ spec:
           readOnly: true
       imagePullSecrets:
       - name: ocir
-    volumes:
+      volumes:
        - name: atp-secret
          secret:
            defaultMode: 420
