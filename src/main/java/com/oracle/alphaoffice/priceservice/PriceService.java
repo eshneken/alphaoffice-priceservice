@@ -5,6 +5,11 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonArray;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
+
 import io.helidon.config.Config;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.ServerRequest;
@@ -59,15 +64,21 @@ public class PriceService implements Service {
      * database data
      */
     private static boolean UseDB = true;
-    private final static String DB_URL = "jdbc:oracle:thin:@atp_medium?TNS_ADMIN=/Users/eshneken/OCI/Wallet_ATP";
+    private final static String ATP_CONNECT_NAME = "atp_medium";
+    private final static String ATP_PASSWORD_FILENAME = "atp_password.txt";
+    private final static String WALLET_LOCATION = "/Users/eshneken/OCI/Wallet_ATP";
+    private final static String DB_URL = "jdbc:oracle:thin:@" + ATP_CONNECT_NAME + "?TNS_ADMIN=" + WALLET_LOCATION;
     private final static String DB_USER = "admin";
-    private final static String DB_PASSWORD = "";
+    private static String DB_PASSWORD;
 
     public PriceService() {
 
         prices = new HashMap < Integer, Double > ();
         try {
-            System.out.println("**reading catalog:  " + CONFIG.get("catalog_path").asString());
+            /**
+             * Load JSON catalog and validate it
+             */
+            System.out.println("**reading JSON catalog:  " + CONFIG.get("catalog_path").asString());
             java.io.InputStream in = getClass().getResourceAsStream(CONFIG.get("catalog_path").asString());
             javax.json.JsonReader reader = Json.createReader( in );
             JsonObject productRoot = reader.readObject();
@@ -80,12 +91,27 @@ public class PriceService implements Service {
                 System.out.println("Loading: " + Integer.valueOf(item.getInt("PRODUCT_ID")) + "=" + Double.valueOf(item.getJsonNumber("LIST_PRICE").doubleValue()));
             }
 
-            // database connect
+            /**
+             * Connect to ATP and verify database connectivity
+             */
             System.out.println("\n**checking DB catalog");
+
+            // load password from file in wallet location
+            StringBuilder contentBuilder = new StringBuilder();
+            try (Stream<String> stream = Files.lines( Paths.get(WALLET_LOCATION + "/" + ATP_PASSWORD_FILENAME), StandardCharsets.UTF_8)) {
+                    stream.forEach(s -> contentBuilder.append(s).append("\n"));
+                }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            DB_PASSWORD = contentBuilder.toString();
+
+            // set DB properties
             Properties info = new Properties();
             info.put(OracleConnection.CONNECTION_PROPERTY_USER_NAME, DB_USER);
             info.put(OracleConnection.CONNECTION_PROPERTY_PASSWORD, DB_PASSWORD);
             info.put(OracleConnection.CONNECTION_PROPERTY_DEFAULT_ROW_PREFETCH, "50");
+
 
             OracleDataSource ods = new OracleDataSource();
             ods.setURL(DB_URL);
@@ -97,13 +123,14 @@ public class PriceService implements Service {
                 DatabaseMetaData dbmd = connection.getMetaData();
                 System.out.println("Driver Name: " + dbmd.getDriverName());
                 System.out.println("Driver Version: " + dbmd.getDriverVersion());
+
                 // Print some connection properties
                 System.out.println("Default Row Prefetch Value is: " +
                     connection.getDefaultRowPrefetch());
                 System.out.println("Database Username is: " + connection.getUserName());
                 System.out.println();
 
-                // Perform a database operation 
+                // pull all catalog entries and count the entries
                 try (Statement statement = connection.createStatement()) {
                     try (ResultSet resultSet = statement
                         .executeQuery("select product_id, list_price from product_catalog order by product_id")) {

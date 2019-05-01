@@ -14,16 +14,17 @@
 # limitations under the License.
 #
 
+---
 kind: Service
 apiVersion: v1
 metadata:
-  name: ${project.artifactId}
+  name: priceservice
   labels:
-    app: ${project.artifactId}
+    app: priceservice
 spec:
   type: NodePort
   selector:
-    app: ${project.artifactId}
+    app: priceservice
   ports:
   - port: 8080
     targetPort: 8080
@@ -32,21 +33,30 @@ spec:
 kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
-  name: ${project.artifactId} 
+  name: priceservice
 spec:
   replicas: 2
   template:
     metadata:
       labels:
-        app: ${project.artifactId}
+        app: priceservice
         version: v1
     spec:
       containers:
-      - name: ${project.artifactId}
-        image: phx.ocir.io/cloud_pursuit_appdev/eshneken/${project.artifactId}:latest
+      - name: priceservice
+        image: iad.ocir.io/orasenatdecaentegacpgut02/eshneken_ocir/priceservice:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - mountPath: /Users/eshneken/OCI/Wallet_ATP
+          name: atp-secret
+          readOnly: true
       imagePullSecrets:
       - name: ocir
+    volumes:
+       - name: atp-secret
+         secret:
+           defaultMode: 420
+           secretName: atp-secret
 ---

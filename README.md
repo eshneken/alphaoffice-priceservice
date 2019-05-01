@@ -62,6 +62,6 @@ Exercise the application as described above
 ```
 kubectl cluster-info                # Verify which cluster
 kubectl get pods                    # Verify connectivity to cluster
-kubectl create -f target/app.yaml   # Deply application
-kubectl get service priceservice  # Get service info
+kubectl create -f target/app.yaml   # Deploy application
+kubectl get service priceservice    # Get service info
 ```
