@@ -1,0 +1,72 @@
+box: openjdk:13-jdk-alpine
+
+build:
+  steps: 
+    - install-packages:
+        packages: maven
+    - script:
+        name: maven build
+        code: mvn package
+
+    # A custom script step, name value is used in the UI
+    # and the code value contains the command that get executed
+    - script:
+        name: copy artifacts
+        code: |
+          mkdir app
+          cp priceservice.jar app
+          cp -r libs app/libs
+push-release:
+  steps:
+    - internal/docker-push:
+        username: $DOCKER_USERNAME
+        password: $DOCKER_PASSWORD
+        repository: $DOCKER_REPO
+        registry: $DOCKER_REGISTRY
+        tag: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
+        working-dir: $WERCKER_ROOT
+        ports: $PORT
+        env: PORT=$PORT
+        cmd: node server.js
+
+#delete any existing Wercker secret before creating, to accommodate secret changes
+inject-secret:
+    box:
+        id: alpine
+        cmd: /bin/sh
+    steps: 
+        
+    - kubectl:
+        name: delete secret
+        server: $KUBERNETES_MASTER
+        token: $KUBERNETES_TOKEN
+        insecure-skip-tls-verify: true
+        command: delete secret ocir --namespace=$NAMESPACE; echo delete registry secret
+
+    - kubectl:
+        name: create secret
+        server: $KUBERNETES_MASTER
+        token: $KUBERNETES_TOKEN
+        insecure-skip-tls-verify: true
+        command: create secret docker-registry ocir --docker-server=$DOCKER_SERVER --docker-username=$DOCKER_USERNAME --docker-password='$DOCKER_PASSWORD' --docker-email=$DOCKER_EMAIL --namespace=$NAMESPACE; echo create registry secret
+
+deploy-to-cluster:
+    box:
+        id: alpine
+        cmd: /bin/sh
+    steps:
+
+    - bash-template
+
+    - script:
+        name: "Prepare K8S Config"
+        code: |
+          mkdir $WERCKER_OUTPUT_DIR/kubernetes
+          mv kubernetes*.yml $WERCKER_OUTPUT_DIR/kubernetes
+
+    - kubectl:
+        name: deploy to kubernetes
+        server: $KUBERNETES_MASTER
+        token: $KUBERNETES_TOKEN
+        insecure-skip-tls-verify: true
+        command: apply -f $WERCKER_OUTPUT_DIR/kubernetes/ --namespace=$NAMESPACE

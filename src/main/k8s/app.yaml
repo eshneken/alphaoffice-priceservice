@@ -21,6 +21,7 @@ metadata:
   name: priceservice
   labels:
     app: priceservice
+    commit: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
 spec:
   type: ClusterIP
   selector:
@@ -34,17 +35,19 @@ kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
   name: priceservice
+  commit: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
 spec:
   replicas: 2
   template:
     metadata:
       labels:
         app: priceservice
+        commit: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
         version: v1
     spec:
       containers:
       - name: priceservice
-        image: iad.ocir.io/orasenatdecaentegacpgut02/eshneken_ocir/priceservice:latest
+        image: ${DOCKER_REPO}:$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
