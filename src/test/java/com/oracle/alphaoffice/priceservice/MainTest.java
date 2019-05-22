@@ -56,6 +56,7 @@ public class MainTest {
     public void testHelloWorld() throws Exception {
         HttpURLConnection conn;
 
+        // remove test for service version since we've overloaded that method with a catalog pull
         /*
         conn = getURLConnection("GET","/price");
         Assertions.assertEquals(200, conn.getResponseCode(), "HTTP response1");
