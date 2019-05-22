@@ -68,7 +68,7 @@ deploy-to-cluster:
         name: "Prepare K8S Config"
         code: |
           mkdir $WERCKER_OUTPUT_DIR/kubernetes
-          cp k8s/app.yaml $WERCKER_OUTPUT_DIR/kubernetes
+          cp src/main/k8s/app.yaml $WERCKER_OUTPUT_DIR/kubernetes
 
     - kubectl:
         name: deploy to kubernetes
