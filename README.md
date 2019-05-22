@@ -28,6 +28,17 @@ Using that tool execute the src/main/resources/load_sql_table.sql to load data i
 ## Configure Code
 Examine src/main/java/com/oracle/alphaoffice/priceservice/PriceService.java and make sure all of the properties (ATP_CONNECT_NAME, WALLET_LOCATION, etc) are correct.
 
+## Install Oracle Drivers in local Maven Repo
+
+```
+cd $BASEDIR
+mvn install:install-file -Dfile=src/main/libs/ojdbc10.jar -DgroupId=com.oracle.jdbc -DartifactId=ojdbc10 -Dversion=19.3.0 -Dpackaging=jar
+mvn install:install-file -Dfile=src/main/libs/ucp.jar -DgroupId=com.oracle.jdbc -DartifactId=ucp -Dversion=19.3.0 -Dpackaging=jar
+mvn install:install-file -Dfile=src/main/libs/osdt_core.jar -DgroupId=com.oracle.jdbc -DartifactId=osdt_core -Dversion=19.3.0 -Dpackaging=jar
+mvn install:install-file -Dfile=src/main/libs/osdt_cert.jar -DgroupId=com.oracle.jdbc -DartifactId=osdt_cert -Dversion=19.3.0 -Dpackaging=jar
+mvn install:install-file -Dfile=src/main/libs/oraclepki.jar -DgroupId=com.oracle.jdbc -DartifactId=oraclepki -Dversion=19.3.0 -Dpackaging=jar
+```
+
 ## Build
 
 ```
@@ -44,7 +55,15 @@ java -jar target/priceservice.jar
 
 ```
 curl -X GET http://localhost:8080/price
-{"message":"PriceService:1.0"}
+{
+    Catalog: {
+        Products: [
+            {
+            PRODUCT_ID: 1039,
+            .
+            .
+            .
+}
 
 curl -X GET http://localhost:8080/price/1001
 {"price":"16.00"}

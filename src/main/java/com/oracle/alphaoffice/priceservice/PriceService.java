@@ -57,6 +57,11 @@ public class PriceService implements Service {
      */
     private static java.util.Map < Integer, Double > prices;
 
+     /**
+     * In-memory product catalog
+     */
+    private static JsonObject catalog;
+
     /** 
      * database data
      */
@@ -78,10 +83,10 @@ public class PriceService implements Service {
             System.out.println("**reading JSON catalog:  " + CONFIG.get("catalog_path").asString());
             java.io.InputStream in = getClass().getResourceAsStream(CONFIG.get("catalog_path").asString());
             javax.json.JsonReader reader = Json.createReader( in );
-            JsonObject productRoot = reader.readObject();
+            catalog = reader.readObject();
             reader.close();
 
-            JsonArray products = productRoot.getJsonArray("Products");
+            JsonArray products = catalog.getJsonArray("Products");
             for (int x = 0; x < products.size(); x++) {
                 JsonObject item = products.getJsonObject(x);
                 prices.put(Integer.valueOf(item.getInt("PRODUCT_ID")), Double.valueOf(item.getJsonNumber("LIST_PRICE").doubleValue()));
@@ -108,7 +113,6 @@ public class PriceService implements Service {
             info.put(OracleConnection.CONNECTION_PROPERTY_USER_NAME, DB_USER);
             info.put(OracleConnection.CONNECTION_PROPERTY_PASSWORD, DB_PASSWORD);
             info.put(OracleConnection.CONNECTION_PROPERTY_DEFAULT_ROW_PREFETCH, "50");
-
 
             OracleDataSource ods = new OracleDataSource();
             ods.setURL(DB_URL);
@@ -168,16 +172,15 @@ public class PriceService implements Service {
     }
 
     /**
-     * Return a default message with the name of the service and the version.
+     * Return a list of all products & metadata from the catalog
      * @param request the server request
      * @param response the server response
      */
     private void getDefaultMessage(final ServerRequest request,
         final ServerResponse response) {
-        String msg = String.format("PriceService:%s", version);
 
         JsonObject returnObject = Json.createObjectBuilder()
-            .add("message", msg)
+            .add("Catalog", catalog)
             .build();
         response.send(returnObject);
     }

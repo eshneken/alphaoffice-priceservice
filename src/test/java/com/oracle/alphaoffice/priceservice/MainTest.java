@@ -56,17 +56,19 @@ public class MainTest {
     public void testHelloWorld() throws Exception {
         HttpURLConnection conn;
 
+        /*
         conn = getURLConnection("GET","/price");
         Assertions.assertEquals(200, conn.getResponseCode(), "HTTP response1");
         JsonReader jsonReader = Json.createReader(conn.getInputStream());
         JsonObject jsonObject = jsonReader.readObject();
         Assertions.assertEquals("PriceService:1.0", jsonObject.getString("message"),
                 "default message");
-
+        */
+        
         conn = getURLConnection("GET", "/price/1001");
         Assertions.assertEquals(200, conn.getResponseCode(), "HTTP response2");
-        jsonReader = Json.createReader(conn.getInputStream());
-        jsonObject = jsonReader.readObject();
+        JsonReader jsonReader = Json.createReader(conn.getInputStream());
+        JsonObject jsonObject = jsonReader.readObject();
         Assertions.assertEquals("16.79", jsonObject.getString("price"),
                 "item price found");
 

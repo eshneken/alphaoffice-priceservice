@@ -195,36 +195,26 @@
                 <groupId>com.oracle.jdbc</groupId>
                 <artifactId>ojdbc10</artifactId>
                 <version>19.3.0</version>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/libs/ojdbc10.jar</systemPath>
             </dependency>
             <dependency>
                 <groupId>com.oracle.jdbc</groupId>
                 <artifactId>ucp</artifactId>
                 <version>19.3.0</version>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/libs/ucp.jar</systemPath>
             </dependency>
             <dependency>
                 <groupId>com.oracle.jdbc</groupId>
                 <artifactId>osdt_core</artifactId>
                 <version>19.3.0</version>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/libs/osdt_core.jar</systemPath>
             </dependency>
             <dependency>
                 <groupId>com.oracle.jdbc</groupId>
                 <artifactId>osdt_cert</artifactId>
                 <version>19.3.0</version>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/libs/osdt_cert.jar</systemPath>
             </dependency>
             <dependency>
                 <groupId>com.oracle.jdbc</groupId>
                 <artifactId>oraclepki</artifactId>
                 <version>19.3.0</version>
-                <scope>system</scope>
-                <systemPath>${basedir}/src/main/libs/oraclepki.jar</systemPath>
             </dependency>
     </dependencies>
 </project>
