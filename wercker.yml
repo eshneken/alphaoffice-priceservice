@@ -61,18 +61,9 @@ deploy-to-cluster:
         id: alpine
         cmd: /bin/sh
     steps:
-
-    - bash-template
-
-    - script:
-        name: "Prepare K8S Config"
-        code: |
-          mkdir $WERCKER_OUTPUT_DIR/kubernetes
-          mv kubernetes*.yml $WERCKER_OUTPUT_DIR/kubernetes
-
     - kubectl:
         name: deploy to kubernetes
         server: $KUBERNETES_MASTER
         token: $KUBERNETES_TOKEN
         insecure-skip-tls-verify: true
-        command: apply -f $WERCKER_OUTPUT_DIR/kubernetes/ --namespace=$NAMESPACE
+        command: apply -f k8s/app.yaml --namespace=$NAMESPACE
