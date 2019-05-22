@@ -1,13 +1,11 @@
 box: openjdk:13-jdk-alpine
 
 build:
-  steps: 
-    - install-packages:
-        packages: maven
-    - script:
-        name: maven build
-        code: mvn package
-
+  box: 3.6.1-jdk-13-alpine
+  steps:
+    - wercker/maven:
+      goals: clean package
+  
     # A custom script step, name value is used in the UI
     # and the code value contains the command that get executed
     - script:
