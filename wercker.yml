@@ -21,7 +21,7 @@ build:
         code: |
           mkdir /app
           cp target/priceservice.jar /app
-          cp -r libs /app/libs
+          cp -r target/libs /app/libs
 push-release:
   steps:
     - internal/docker-push:
