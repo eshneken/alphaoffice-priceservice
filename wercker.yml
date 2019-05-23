@@ -13,15 +13,7 @@ build:
          mvn install:install-file -Dfile=src/main/libs/oraclepki.jar -DgroupId=com.oracle.jdbc -DartifactId=oraclepki -Dversion=19.3.0 -Dpackaging=jar
     - wercker/maven:
       goals: clean package
-  
-    # A custom script step, name value is used in the UI
-    # and the code value contains the command that get executed
-    - script:
-        name: copy artifacts
-        code: |
-          mkdir /app
-          cp target/priceservice.jar /app
-          cp -r target/libs /app/libs
+
 push-release:
   steps:
     - internal/docker-push:
