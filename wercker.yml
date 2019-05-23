@@ -33,7 +33,7 @@ push-release:
         working-dir: $WERCKER_ROOT
         ports: $PORT
         env: PORT=$PORT
-        cmd: node server.js
+        cmd: java -jar /app/priceservice.jar
 
 #delete any existing Wercker secret before creating, to accommodate secret changes
 inject-secret:
