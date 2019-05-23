@@ -69,6 +69,7 @@ deploy-to-cluster:
         code: |
           mkdir $WERCKER_OUTPUT_DIR/kubernetes
           mv kubernetes*.yml $WERCKER_OUTPUT_DIR/kubernetes
+          cat $WERCKER_OUTPUT_DIR/kubernetes/kubernetes.yml
 
     - kubectl:
         name: deploy to kubernetes
